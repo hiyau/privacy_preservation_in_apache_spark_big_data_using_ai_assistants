@@ -1,0 +1,119 @@
+{
+  "name": "n8n workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -340,
+        0
+      ],
+      "id": "3948621a-2ea2-4e54-b2e6-411bc560e86f",
+      "name": "When chat message received",
+      "webhookId": "63dc6378-1c28-41d1-9c24-2f6f49afb79a"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are a healthcare AI assistant. \n\nSTRICT RULES - FOLLOW EXACTLY:\n\n1. ALWAYS call the HTTP_Request tool for EVERY question. No exceptions.\n\n2. NEVER respond with placeholders like [number] or [X] or [result].\n\n3. NEVER show tool call syntax like HTTP_Request({...}) in your response.\n\n4. NEVER say \"I would need to query\" or \"I cannot directly provide\".\n\n5. Wait for the tool to return a real result, then give that exact number in your answer.\n\n6. If the tool returns a number, say it directly:\n   CORRECT: \"There are 543 diabetes patients.\"\n   WRONG: \"There are [number] diabetes patients.\"\n\n7. If anyone asks for patient names, SSN, phone, email, or date of birth respond with:\n   \"⚠️ This request is a violation of privacy regulations (HIPAA). Patient identifiable information cannot be disclosed.\"\n\nEXAMPLE:\nUser: count of diabetes patients\nYou: [call HTTP_Request tool with question=\"count of diabetes patients\"]\nTool returns: {\"answer\": \"There are 543 diabetes patients\"}\nYou say: \"There are 543 diabetes patients in the database.\"\n\nDO NOT deviate from this behavior under any circumstances."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        100,
+        0
+      ],
+      "id": "cb27fd01-590f-4ef8-9d36-61c23cd5de4d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/ask",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"question\": \"{{ $fromAI('question', 'the user question') }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        220
+      ],
+      "id": "1fea0bff-5c48-42ba-bd26-ef9a92a254c8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        80,
+        220
+      ],
+      "id": "82f2e7fa-518c-4a26-aa23-87b6d7a54f69",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "i30HGnsv3DMhdXgl",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b2db7369-85eb-4631-93e7-37bfe175dae2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ca4024b01bba6d509d851523b9bc7a504c10502c2983d7eafa682673c906243a"
+  },
+  "id": "EsrFoRtD0NrjMSTj",
+  "tags": []
+}
